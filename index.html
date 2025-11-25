@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Night – Laura Edition</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:20px; background:#f2f2f2; }
+    .container { max-width:600px; margin:auto; background:white; padding:20px; border-radius:12px; }
+    button { padding:12px 20px; font-size:16px; border:none; border-radius:8px; cursor:pointer; margin-top:10px; }
+    .option { display:block; width:100%; background:#e5e5e5; padding:12px; margin:6px 0; border-radius:8px; }
+    #leaderboard div { padding:8px 0; border-bottom:1px solid #ddd; }
+  </style>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>Quiz Night – Laura Edition</h2>
+    <div id="screen_start">
+      <p>Inserisci il tuo nome:</p>
+      <input id="playerName" type="text" placeholder="Nome" style="width:100%; padding:10px; border-radius:8px;" />
+      <button onclick="startGame()">Entra nel quiz</button>
+    </div>
+
+    <div id="screen_quiz" style="display:none;">
+      <h3 id="question_text"></h3>
+      <img id="img" src="" style="max-width:100%; border-radius:12px; display:none;" />
+      <audio id="audio" controls style="width:100%; display:none;"></audio>
+      <video id="video" controls style="width:100%; border-radius:12px; display:none;"></video>
+      <div id="options"></div>
+    </div>
+
+    <div id="screen_end" style="display:none;">
+      <h3>Quiz terminato!</h3>
+      <p>Punteggio totale: <span id="final_score"></span></p>
+    </div>
+
+    <h3>Classifica Live</h3>
+    <div id="leaderboard"></div>
+  </div>
+
+  <script>
+    // Firebase Config (placeholder – inserisci i tuoi dati)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6zMoIJGQr5WQro3vVM-2mrWhrEDJiXlc",
+      authDomain: "pigiamaparty-58818.firebaseapp.com",
+      databaseURL: https://pigiamaparty-58818-default-rtdb.europe-west1.firebasedatabase.app/",
+      projectId: "pigiamaparty-58818",
+      storageBucket: "pigiamaparty-58818.firebasestorage.app",
+      messagingSenderId: "1069482422068",
+      appId: "1:1069482422068:web:a16d8c4bac3a4742dabf61"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let player = "";
+    let score = 0;
+    let currentIndex = 0;
+
+    const quiz = [
+      // ESEMPIO – Te ne preparerò 60 su richiesta
+      { q:"Capitale dell'Australia?", options:["Sydney", "Canberra", "Melbourne"], answer:1 },
+      { q:"Chi ha dipinto la Gioconda?", options:["Van Gogh","Leonardo da Vinci","Michelangelo"], answer:1 }
+    ];
+
+    function startGame() {
+      player = document.getElementById("playerName").value.trim();
+      if(!player) return alert("Inserisci un nome!");
+
+      db.ref("players/" + player).set(0);
+
+      document.getElementById("screen_start").style.display = "none";
+      document.getElementById("screen_quiz").style.display = "block";
+
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      let q = quiz[currentIndex];
+      document.getElementById("question_text").innerText = q.q;
+
+      // Pulizia media
+      document.getElementById("img").style.display = "none";
+      document.getElementById("audio").style.display = "none";
+      document.getElementById("video").style.display = "none";
+
+      // Opzioni
+      let box = document.getElementById("options");
+      box.innerHTML = "";
+
+      q.options.forEach((opt, i) => {
+        let btn = document.createElement("button");
+        btn.className = "option";
+        btn.innerText = opt;
+        btn.onclick = () => answer(i);
+        box.appendChild(btn);
+      });
+    }
+
+    function answer(i) {
+      if(i === quiz[currentIndex].answer) {
+        score += 10;
+      }
+
+      db.ref("players/" + player).set(score);
+
+      currentIndex++;
+
+      if(currentIndex < quiz.length) loadQuestion();
+      else endGame();
+    }
+
+    function endGame() {
+      document.getElementById("screen_quiz").style.display = "none";
+      document.getElementById("screen_end").style.display = "block";
+      document.getElementById("final_score").innerText = score;
+    }
+
+    // CLASSIFICA LIVE
+    db.ref("players").on("value", snap => {
+      let data = snap.val();
+      let entries = Object.entries(data || {}).sort((a,b)=>b[1]-a[1]);
+      let out = "";
+      entries.forEach(e => out += `<div><b>${e[0]}</b>: ${e[1]} punti</div>`);
+      document.getElementById("leaderboard").innerHTML = out;
+    });
+  </script>
+</body>
+</html>
