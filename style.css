@@ -1,0 +1,33 @@
+body {
+    background: #222;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+button {
+    background: #ff4f4f;
+    color: white;
+    padding: 15px 25px;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 10px;
+}
+
+#answers button {
+    display: block;
+    margin: 10px auto;
+    width: 80%;
+    background: #3a3a3a;
+}
+
+#timer {
+    margin-top: 20px;
+    font-size: 20px;
+}
